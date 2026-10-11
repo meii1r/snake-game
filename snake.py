@@ -100,4 +100,48 @@ class SnakeGame:
         # удар о стену или об себя
         if (new_head[0] < 0 or new_head[0] >= COLS
                 or new_head[1] < 0 or new_head[1] >= ROWS
-                or new_head in self.snak
+                or new_head in self.snake):
+            self.draw()
+            self.finish("Игра окончена")
+            return
+
+        self.snake.insert(0, new_head)
+
+        if new_head == self.food:
+            self.score += 1
+            if self.score > self.record:
+                self.record = self.score
+                save_record(self.record)
+            self.update_score()
+            if not self.place_food():
+                self.draw()
+                self.finish("Победа!")
+                return
+        else:
+            self.snake.pop()  # не съела еду - хвост двигается
+
+        self.draw()
+        self.job = self.root.after(SPEED, self.step)
+
+    def draw(self):
+        self.canvas.delete("all")
+        if self.food is not None:
+            fx, fy = self.food
+            self.canvas.create_oval(fx * CELL, fy * CELL,
+                                    (fx + 1) * CELL, (fy + 1) * CELL, fill="red")
+        for i, (x, y) in enumerate(self.snake):
+            color = "lime" if i == 0 else "green"
+            self.canvas.create_rectangle(x * CELL, y * CELL,
+                                         (x + 1) * CELL, (y + 1) * CELL,
+                                         fill=color, outline="black")
+
+    def finish(self, text):
+        self.job = None
+        self.canvas.create_text(COLS * CELL // 2, ROWS * CELL // 2,
+                                text=text, fill="white", font=("Arial", 22))
+
+
+if __name__ == "__main__":
+    root = tk.Tk()
+    SnakeGame(root)
+    root.mainloop()
